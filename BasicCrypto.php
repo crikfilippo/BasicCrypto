@@ -1,7 +1,3 @@
-<?php
-
-namespace BasicCrypto;
-
 class BasicCrypto
 {
     private static bool $isReady = false;
@@ -30,26 +26,27 @@ class BasicCrypto
     
     //ENCRYPT
     public static function encrypt(?string $plainValue = null) : ?string {
-
         if(strlen(trim(($plainValue ?? ''))) == 0){ return null; }
         $iv = openssl_random_pseudo_bytes(self::$initializationVectorLength);
         $encryptedValue = openssl_encrypt( $plainValue, self::$cipherAlgo,  substr(self::$saltedKey, 0, 32), 0,  $iv );
         $encryptedValue = ($iv . $encryptedValue);
-        $encryptedValue = base64_encode($encryptedValue);
+        $hmac = hash_hmac('sha256', $encryptedValue, self::$saltedKey, true); //authenticated
+        $encryptedValue = base64_encode($hmac . $encryptedValue);
         return $encryptedValue;
-        
     }
 
     //DECRYPT
     public static function decrypt(?string $encryptedValue = null) : ?string {
-
         if(strlen(trim(($encryptedValue ?? ''))) == 0){ return null; }
         $plainValue = base64_decode($encryptedValue);
+        $hmac = substr($plainValue, 0, 32); //authenticated - sha256 = 32 byte
+        $plainValue = substr($plainValue, 32);
+        $computedHmac = hash_hmac('sha256', $plainValue, self::$saltedKey, true);
+        if(!hash_equals($hmac, $computedHmac)){ return null; }
         $iv = substr($plainValue, 0, self::$initializationVectorLength);
         $plainValue = substr($plainValue, self::$initializationVectorLength);
         $plainValue = openssl_decrypt( $plainValue, self::$cipherAlgo, substr(self::$saltedKey, 0, 32), 0, $iv );
         return $plainValue;
-
     }
 
     //[UTILITY] GENERATE AUTH KEY
@@ -76,6 +73,5 @@ class BasicCrypto
         if( is_null($cipherAlgo) ){ $cipherAlgo = self::$cipherAlgo; }
         return openssl_cipher_iv_length($cipherAlgo);
     }
-
 
 }
