@@ -7,7 +7,7 @@ class BasicCrypto
     private static string $hashAlgo;
 	
 	public function __construct(){
-        if( ! self::$isReady){ throw new \Exception('EncryptedString not initialized, please use ::setParams()'); }
+        if( ! self::$isReady){ throw new \Exception('BasicCrypto not initialized, please use ::setParams()'); }
 	}
 
     //SET REQUIRED PARAMS
