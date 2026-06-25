@@ -1,3 +1,7 @@
+<?php
+
+namespace BasicCrypto;
+
 class BasicCrypto
 {
     private static bool $isReady = false;
