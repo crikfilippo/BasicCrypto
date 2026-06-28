@@ -11,8 +11,12 @@ class BasicCrypto
     private static string $hashAlgo;
 	
 	public function __construct(){
-        if( ! self::$isReady){ throw new \Exception('BasicCrypto not initialized, please use ::setParams()'); }
+        self::checkReady();
 	}
+
+    public static function checkReady(){
+        if( ! self::$isReady){ throw new \Exception('Crypto not initialized, please use ::setParams()'); }
+    }
 
     //SET REQUIRED PARAMS
     public static function setParams(
@@ -30,6 +34,8 @@ class BasicCrypto
     
     //ENCRYPT
     public static function encrypt(?string $plainValue = null) : ?string {
+        self::checkReady();
+        if( ! self::$isReady){ throw new \Exception('Crypto not initialized, please use ::setParams()'); }
         if(strlen(trim(($plainValue ?? ''))) == 0){ return null; }
         $iv = openssl_random_pseudo_bytes(self::$initializationVectorLength);
         $encryptedValue = openssl_encrypt( $plainValue, self::$cipherAlgo,  substr(self::$saltedKey, 0, 32), 0,  $iv );
@@ -41,6 +47,7 @@ class BasicCrypto
 
     //DECRYPT
     public static function decrypt(?string $encryptedValue = null) : ?string {
+        self::checkReady();
         if(strlen(trim(($encryptedValue ?? ''))) == 0){ return null; }
         $plainValue = base64_decode($encryptedValue);
         $hmac = substr($plainValue, 0, 32); //authenticated - sha256 = 32 byte
